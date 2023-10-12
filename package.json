@@ -1,0 +1,55 @@
+{
+  "name": "zod-pattern",
+  "version": "0.0.5",
+  "description": "",
+  "main": "./lib/index.js",
+  "module": "./lib/index.mjs",
+  "files": [
+    "/lib",
+    "/index.d.ts"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "require": "./lib/index.js",
+      "import": "./lib/index.mjs"
+    },
+    "./package.json": "./package.json",
+    "./locales/*": "./lib/locales/*"
+  },
+  "scripts": {
+    "clean": "rm -rf lib/*",
+    "build": "npm run clean && npm run build:cjs && npm run build:esm",
+    "build:esm": "rollup --config ./configs/rollup.config.js",
+    "build:cjs": "tsc -p ./configs/tsconfig.cjs.json",
+    "lint:check": "eslint --cache --ext .ts ./src",
+    "lint:fix": "eslint --cache --fix --ext .ts ./src",
+    "test": "npm run test:ts-jest",
+    "test:ts-jest": "npx jest --config ./configs/ts-jest.config.json"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.22.5",
+    "@babel/preset-env": "^7.22.5",
+    "@babel/preset-typescript": "^7.22.5",
+    "@rollup/plugin-typescript": "^11.1.5",
+    "@typescript-eslint/eslint-plugin": "^5.15.0",
+    "@typescript-eslint/parser": "^5.15.0",
+    "babel-jest": "^29.5.0",
+    "eslint": "^8.11.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-ban": "^1.6.0",
+    "eslint-plugin-import": "^2.25.4",
+    "eslint-plugin-simple-import-sort": "^7.0.0",
+    "eslint-plugin-unused-imports": "^2.0.0",
+    "rollup": "^4.0.2",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.2.2"
+  },
+  "peerDependencies": {
+    "zod": "^3.0.0"
+  },
+  "sideEffects": false
+}
