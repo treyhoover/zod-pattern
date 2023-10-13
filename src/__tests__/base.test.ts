@@ -7,7 +7,8 @@ describe("match", () => {
   it("matches literal pattern", () => {
     type Strength = "weak" | "medium" | "strong";
 
-    const predictionMatcher = pattern<Strength>()
+    const predictionMatcher = pattern()
+      .returnType<Strength>()
       .case(z.number().gte(0.8), "strong")
       .case(z.number().gte(0.5), "medium")
       .default("weak");
@@ -18,7 +19,7 @@ describe("match", () => {
   });
 
   it("matches literal pattern with transform functions", () => {
-    const predictionMatcher = pattern<string>()
+    const predictionMatcher = pattern()
       .case(z.number().gte(0.8), (value) => `strong (${value})`)
       .case(z.number().gte(0.5), (value) => `medium (${value})`)
       .default((value) => `weak (${value})`);
@@ -29,7 +30,7 @@ describe("match", () => {
   });
 
   it("matches partial objects", () => {
-    const partialMatcher = pattern<string>()
+    const partialMatcher = pattern()
       .case(
         z.object({ key: z.string() }),
         ({ key }) => `Matched via key: "${key}"`

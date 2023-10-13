@@ -1,41 +1,82 @@
 # `zod-pattern`
 
-Combine the power of `zod` and pattern matching into one powerful library. Define your schemas with `zod`, and then use those schemas for type-safe pattern matching.
+Pattern matching utility powered by Zod schemas.
+
+## Overview
+
+`zod-pattern` provides a simple, typesafe and flexible pattern matching utility based on Zod schemas. With this library, you can validate and transform data using the power of Zod, and easily handle various cases based on the shape and value of the input.
 
 ## Features
 
-- 📦 **Schema Reusability**: Use the same `zod` schemas for both validation and pattern matching.
-- 🌟 **Type Safety**: Thanks to `zod`'s `infer` and the nature of pattern matching, objects are strongly typed.
-- ⚡ **Clear Syntax**: Concise and expressive syntax to make your patterns clear and readable.
+- ⚡ Clear Syntax: Concise and expressive syntax to make your patterns clear and readable.
+- 🌟 Full Type Inference: Achieve strong typing for matched data and results with the power of Zod's infer.
+- 🚀 Optional Transforms: Either provide static outcomes or utilize dynamic transform functions for matched results.
 
 ## Installation
 
 ```bash
-npm install zod-pattern zod
+npm install zod-pattern
 ```
 
-## Quick Start
+## Usage
+
+### Basic Matching
+
+Define patterns using Zod schemas and corresponding results:
 
 ```typescript
+import { pattern } from "zod-pattern";
 import { z } from "zod";
-import { match } from "zod-pattern";
 
-const DogSchema = z.object({
-  type: z.literal("dog"),
-  bark: z.boolean(),
-});
+type Strength = "strong" | "medium" | "weak";
 
-const CatSchema = z.object({
-  type: z.literal("cat"),
-  meow: z.boolean(),
-});
+const predictionMatcher = pattern()
+  .returnType<Strength>()
+  .case(z.number().gte(0.8), "strong")
+  .case(z.number().gte(0.5), "medium")
+  .default("weak");
 
-const myAnimal = { type: "dog", bark: true };
-
-const result = match(myAnimal)
-  .case(DogSchema, (dog) => `It is a ${dog.bark ? "barking" : "quiet"} dog!`)
-  .case(CatSchema, (cat) => `It is a ${cat.meow ? "meowing" : "quiet"} cat!`)
-  .default(() => "Unknown animal.");
-
-console.log(result); // Outputs: "It is a barking dog!"
+const result = predictionMatcher.match(0.97); // "strong"
 ```
+
+### Matching with Transform Functions
+
+Transform matched data on-the-fly:
+
+```typescript
+const predictionMatcher = pattern()
+  .case(z.number().gte(0.8), (value) => `strong (${value * 100}%)`)
+  .case(z.number().gte(0.5), (value) => `medium (${value * 100}%)`)
+  .default((value) => `weak (${value * 100}%)`);
+
+const result = predictionMatcher.match(0.97); // "strong (97%)"
+```
+
+### Matching Partial Objects
+
+Match based on partial object shapes:
+
+```typescript
+const partialMatcher = pattern()
+  .case(z.object({ key: z.string() }), ({ key }) => `Matched via key: "${key}"`)
+  .default("not matched");
+
+const result = partialMatcher.match({ key: "magic", unused: "value" }); // `Matched via key: "magic"`
+```
+
+### Routing Events
+
+Process and route various messages/events:
+
+```typescript
+const messageMatcher = pattern()
+  .case(textMessageSchema, handleTextMessage)
+  .case(userUpdateSchema, handleUserUpdate)
+  .case(connectionSchema, handleConnection)
+  .case(errorSchema, handleError)
+  .default((err) => new Error(`Unknown message: ${err}`));
+```
+
+## License
+
+`zod-pattern` is [MIT licensed](./LICENSE).
