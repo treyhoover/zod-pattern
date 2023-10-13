@@ -5,43 +5,39 @@ import { match } from "../index";
 
 describe("match", () => {
   it("matches literal pattern", () => {
-    const result = match("hello")
-      .case(z.literal("hello"), "matched")
-      .case(z.literal("world"), "not matched")
-      .default("default");
+    type Strength = "weak" | "medium" | "strong";
 
-    expect(result).toEqual("matched");
+    const predictionMatcher = match<Strength>()
+      .case(z.number().gte(0.8), "strong")
+      .case(z.number().gte(0.5), "medium")
+      .default("weak");
+
+    const result = predictionMatcher.match(1);
+
+    expect(result).toEqual("strong");
   });
 
-  it("matches object pattern", () => {
-    const result = match({ key: "value" })
-      .case(z.object({ key: z.string() }), { matched: true })
-      .default({ matched: false });
+  it("matches literal pattern with transform functions", () => {
+    const predictionMatcher = match<string>()
+      .case(z.number().gte(0.8), (value) => `strong (${value})`)
+      .case(z.number().gte(0.5), (value) => `medium (${value})`)
+      .default((value) => `weak (${value})`);
 
-    expect(result).toEqual({ matched: true });
-  });
+    const result = predictionMatcher.match(1);
 
-  it("matches number ranges", () => {
-    const result = match(7)
-      .case(z.number().min(5).max(10), "within range")
-      .default("out of range");
-
-    expect(result).toEqual("within range");
-  });
-
-  it("falls back to input if no match found", () => {
-    const result = match("test")
-      .case(z.literal("hello"), "hello")
-      .default((input) => input);
-
-    expect(result).toEqual("test");
+    expect(result).toEqual("strong (1)");
   });
 
   it("matches partial objects", () => {
-    const result = match({ key: "value", other: "other" })
-      .case(z.object({ key: z.string() }), "matched" as const)
-      .default("not matched" as const);
+    const partialMatcher = match<string>()
+      .case(
+        z.object({ key: z.string() }),
+        ({ key }) => `Matched via key: "${key}"`
+      )
+      .default("not matched");
 
-    expect(result).toEqual("matched");
+    const result = partialMatcher.match({ key: "magic", unused: "value" });
+
+    expect(result).toEqual(`Matched via key: "magic"`);
   });
 });

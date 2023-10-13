@@ -1,49 +1,65 @@
-import { z } from "zod";
+import { ZodType } from "zod";
 
-type MatchState<Output> = {
-  matched: boolean;
-  value: Output;
-};
+type ResultFn<Output, Input> = (value: Input) => Output;
 
-const unmatched = <Output>(): MatchState<Output> => ({
-  matched: false,
-  value: undefined as never,
-});
-
-export function match<Input>(input: Input) {
-  return new MatchExpression<Input, never>(input, unmatched<never>());
+function isResultFn<Output, Input>(
+  value: Output | ResultFn<Output, Input>
+): value is ResultFn<Output, Input> {
+  return typeof value === "function";
 }
 
-class MatchExpression<Input, Output> {
-  constructor(private input: Input, private state: MatchState<Output>) {}
+class MatchBuilder<Output, Input = unknown> {
+  private cases: {
+    schema: ZodType<Input, any, any>;
+    result: Output | ResultFn<Output, Input>;
+  }[] = [];
 
-  case<T extends Partial<Input>, R>(
-    pattern: z.ZodType<T>,
-    handler: ((value: T) => R) | R
-  ): MatchExpression<Input, R | Output> {
-    if (this.state.matched)
-      return this as unknown as MatchExpression<Input, R | Output>;
+  case<NewInput>(
+    schema: ZodType<NewInput, any, any>,
+    result: Output | ResultFn<Output, NewInput>
+  ): MatchBuilder<Output, Input | NewInput> {
+    // Using `as any` here to bypass type incompatibility, not ideal but works for this use case
+    this.cases.push({ schema, result } as any);
 
-    const parsed = pattern.safeParse(this.input);
-
-    const newState: MatchState<R | Output> = parsed.success
-      ? {
-          matched: true,
-          value:
-            typeof handler === "function"
-              ? (handler as (value: T) => R)(parsed.data)
-              : (handler as R),
-        }
-      : (this.state as MatchState<R | Output>);
-
-    return new MatchExpression(this.input, newState);
+    return this as any;
   }
 
-  default<R>(handler: ((value: Input) => R) | R): R | Output {
-    if (this.state.matched) return this.state.value as Output;
-
-    return typeof handler === "function"
-      ? (handler as (value: Input) => R)(this.input)
-      : (handler as R);
+  default(value: Output | ResultFn<Output, Input>): Matcher<Output, Input> {
+    return new Matcher<Output, Input>(this.cases, value);
   }
+}
+
+export class Matcher<Output, Input = unknown> {
+  private cases: {
+    schema: ZodType<Input, any, any>;
+    result: Output | ResultFn<Output, Input>;
+  }[];
+  private defaultValue: Output | ResultFn<Output, Input>;
+
+  constructor(
+    cases: {
+      schema: ZodType<Input, any, any>;
+      result: Output | ResultFn<Output, Input>;
+    }[],
+    defaultValue: Output | ResultFn<Output, Input>
+  ) {
+    this.cases = cases;
+    this.defaultValue = defaultValue;
+  }
+
+  match(value: Input): Output {
+    for (const { schema, result } of this.cases) {
+      if (schema.safeParse(value).success) {
+        return isResultFn(result) ? result(value) : result;
+      }
+    }
+
+    return isResultFn(this.defaultValue)
+      ? this.defaultValue(value)
+      : this.defaultValue;
+  }
+}
+
+export function match<T>(): MatchBuilder<T> {
+  return new MatchBuilder<T>();
 }
