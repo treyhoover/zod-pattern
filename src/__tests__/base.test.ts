@@ -1,13 +1,13 @@
 import { describe, expect, it } from "@jest/globals";
 import { z } from "zod";
 
-import { match } from "../index";
+import { pattern } from "../index";
 
 describe("match", () => {
   it("matches literal pattern", () => {
     type Strength = "weak" | "medium" | "strong";
 
-    const predictionMatcher = match<Strength>()
+    const predictionMatcher = pattern<Strength>()
       .case(z.number().gte(0.8), "strong")
       .case(z.number().gte(0.5), "medium")
       .default("weak");
@@ -18,7 +18,7 @@ describe("match", () => {
   });
 
   it("matches literal pattern with transform functions", () => {
-    const predictionMatcher = match<string>()
+    const predictionMatcher = pattern<string>()
       .case(z.number().gte(0.8), (value) => `strong (${value})`)
       .case(z.number().gte(0.5), (value) => `medium (${value})`)
       .default((value) => `weak (${value})`);
@@ -29,7 +29,7 @@ describe("match", () => {
   });
 
   it("matches partial objects", () => {
-    const partialMatcher = match<string>()
+    const partialMatcher = pattern<string>()
       .case(
         z.object({ key: z.string() }),
         ({ key }) => `Matched via key: "${key}"`

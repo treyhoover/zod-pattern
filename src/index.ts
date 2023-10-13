@@ -1,1 +1,1 @@
-export { match } from "./match";
+export { pattern } from "./match";

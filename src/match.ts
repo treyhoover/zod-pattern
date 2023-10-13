@@ -60,6 +60,6 @@ export class Matcher<Output, Input = unknown> {
   }
 }
 
-export function match<T>(): MatchBuilder<T> {
+export function pattern<T>(): MatchBuilder<T> {
   return new MatchBuilder<T>();
 }
