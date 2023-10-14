@@ -1,6 +1,11 @@
-# `zod-pattern`
-
-Pattern matching utility powered by Zod schemas.
+<p align="center">
+  <img src="logo.svg" width="150px" align="center" alt="Zod logo" />
+  <h1 align="center">Zod Pattern</h1>
+  
+  <p align="center">
+    Pattern matching utility powered by Zod schemas
+  </p>
+</p>
 
 ## Overview
 
